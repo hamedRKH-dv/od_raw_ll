@@ -1,0 +1,44 @@
+{
+  "check": "p3",
+  "passed": true,
+  "reason": "upsample=False reproduces normal beamform on all windows",
+  "max_abs_diff": {
+    "0A1OLRV96N3": {
+      "False": 0.0,
+      "True": "rejected: BfImagePipeline::setOverrideChannelData: Invalid dimensions, got [      680,      128], expected [      204,      128]"
+    },
+    "0A49KLT3B7Y": {
+      "False": 0.0,
+      "True": "rejected: BfImagePipeline::setOverrideChannelData: Invalid dimensions, got [      680,      128], expected [      204,      128]"
+    },
+    "0ABP0TFUSH1": {
+      "False": 0.0,
+      "True": "rejected: BfImagePipeline::setOverrideChannelData: Invalid dimensions, got [      680,      128], expected [      204,      128]"
+    },
+    "0AGBXB4WEGN": {
+      "False": 0.0,
+      "True": "rejected: BfImagePipeline::setOverrideChannelData: Invalid dimensions, got [      680,      128], expected [      204,      128]"
+    },
+    "0AP3OOMEPID": {
+      "False": 0.0,
+      "True": "rejected: BfImagePipeline::setOverrideChannelData: Invalid dimensions, got [      680,      128], expected [      204,      128]"
+    }
+  },
+  "exact_settings": {
+    "0A1OLRV96N3": [
+      "False"
+    ],
+    "0A49KLT3B7Y": [
+      "False"
+    ],
+    "0ABP0TFUSH1": [
+      "False"
+    ],
+    "0AGBXB4WEGN": [
+      "False"
+    ],
+    "0AP3OOMEPID": [
+      "False"
+    ]
+  }
+}

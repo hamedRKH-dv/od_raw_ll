@@ -1,0 +1,42 @@
+{
+  "0A1OLRV96N3": {
+    "volume_id": "0005b152-9eef-51e5-9915-210204d6ba05",
+    "clip_id": "01-013-114ZP5VY",
+    "frame_start": 4179111,
+    "n_frames": 70,
+    "anomaly_type": "random",
+    "no_positive_in_eval": true
+  },
+  "0A49KLT3B7Y": {
+    "volume_id": "e7959c75-ceed-519e-a855-a3deafeb5aaa",
+    "clip_id": "01-011-11YWDVD4",
+    "frame_start": 6735163,
+    "n_frames": 105,
+    "anomaly_type": "od_corrosion",
+    "no_positive_in_eval": false
+  },
+  "0ABP0TFUSH1": {
+    "volume_id": "7d0f544b-fedd-58a4-b777-d7fbe9ad9d4a",
+    "clip_id": "01-012-145IKTIF",
+    "frame_start": 5528611,
+    "n_frames": 102,
+    "anomaly_type": "od_corrosion",
+    "no_positive_in_eval": false
+  },
+  "0AGBXB4WEGN": {
+    "volume_id": "4e53520e-966f-5de1-b866-f7e32d488a39",
+    "clip_id": "01-000-15LR96LM",
+    "frame_start": 1307094,
+    "n_frames": 102,
+    "anomaly_type": "od_corrosion",
+    "no_positive_in_eval": false
+  },
+  "0AP3OOMEPID": {
+    "volume_id": "1074d0fd-6f4d-5246-8db5-3dfa44c2961d",
+    "clip_id": "01-001-18AJ0C8D",
+    "frame_start": 10298571,
+    "n_frames": 53,
+    "anomaly_type": "od_corrosion",
+    "no_positive_in_eval": false
+  }
+}

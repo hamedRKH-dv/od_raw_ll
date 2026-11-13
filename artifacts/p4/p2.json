@@ -1,0 +1,6 @@
+{
+  "check": "p2",
+  "passed": true,
+  "reason": "OuterSurfaceDetect -> ImageProfile.ZeroAngle",
+  "profile": "ImageProfile.ZeroAngle"
+}

@@ -1,0 +1,92 @@
+{
+  "0A1OLRV96N3": {
+    "volume_id": "0005b152-9eef-51e5-9915-210204d6ba05",
+    "candidates": [
+      {
+        "bucket": "dv-ilit0007",
+        "prefix": "track_runs/0A1OLRV96N3/ili_ml_surface/v1.2",
+        "exact_frac": 0.42373007009010666,
+        "within_1_frac": 0.715849969459473,
+        "max_lsb": 324,
+        "p999_lsb": 16.0
+      }
+    ],
+    "winner": {
+      "bucket": "dv-ilit0007",
+      "prefix": "track_runs/0A1OLRV96N3/ili_ml_surface/v1.2"
+    },
+    "passed": false
+  },
+  "0A49KLT3B7Y": {
+    "volume_id": "e7959c75-ceed-519e-a855-a3deafeb5aaa",
+    "candidates": [
+      {
+        "bucket": "dv-ilit0008",
+        "prefix": "track_runs/0A49KLT3B7Y/ili_ml_surface/v1.2",
+        "exact_frac": 0.3900107496208623,
+        "within_1_frac": 0.6703653742947072,
+        "max_lsb": 3816,
+        "p999_lsb": 16.0
+      }
+    ],
+    "winner": {
+      "bucket": "dv-ilit0008",
+      "prefix": "track_runs/0A49KLT3B7Y/ili_ml_surface/v1.2"
+    },
+    "passed": false
+  },
+  "0ABP0TFUSH1": {
+    "volume_id": "7d0f544b-fedd-58a4-b777-d7fbe9ad9d4a",
+    "candidates": [
+      {
+        "bucket": "dv-ilit0010",
+        "prefix": "track_runs/0ABP0TFUSH1/ili_ml_surface/v1.2",
+        "exact_frac": 0.15830190561575652,
+        "within_1_frac": 0.2199239010142476,
+        "max_lsb": 19287,
+        "p999_lsb": 4903.0
+      }
+    ],
+    "winner": {
+      "bucket": "dv-ilit0010",
+      "prefix": "track_runs/0ABP0TFUSH1/ili_ml_surface/v1.2"
+    },
+    "passed": false
+  },
+  "0AGBXB4WEGN": {
+    "volume_id": "4e53520e-966f-5de1-b866-f7e32d488a39",
+    "candidates": [
+      {
+        "bucket": "dv-ilit0011",
+        "prefix": "track_runs/0AGBXB4WEGN/ili_ml_surface",
+        "exact_frac": 0.18714097026317436,
+        "within_1_frac": 0.26051260747527316,
+        "max_lsb": 11349,
+        "p999_lsb": 4849.0
+      }
+    ],
+    "winner": {
+      "bucket": "dv-ilit0011",
+      "prefix": "track_runs/0AGBXB4WEGN/ili_ml_surface"
+    },
+    "passed": false
+  },
+  "0AP3OOMEPID": {
+    "volume_id": "1074d0fd-6f4d-5246-8db5-3dfa44c2961d",
+    "candidates": [
+      {
+        "bucket": "dv-ilit0013",
+        "prefix": "track_runs/0AP3OOMEPID/ili_ml_surface",
+        "exact_frac": 1.0,
+        "within_1_frac": 1.0,
+        "max_lsb": 0,
+        "p999_lsb": 0.0
+      }
+    ],
+    "winner": {
+      "bucket": "dv-ilit0013",
+      "prefix": "track_runs/0AP3OOMEPID/ili_ml_surface"
+    },
+    "passed": true
+  }
+}

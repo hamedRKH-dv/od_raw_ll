@@ -1,0 +1,23 @@
+{
+  "check": "p5",
+  "passed": true,
+  "reason": "99.9th-percentile error <= 1.0 LSB on 1 inspections",
+  "per_inspection": {
+    "0A1OLRV96N3": {
+      "skipped": "no P4 surface"
+    },
+    "0A49KLT3B7Y": {
+      "skipped": "no P4 surface"
+    },
+    "0ABP0TFUSH1": {
+      "skipped": "no P4 surface"
+    },
+    "0AGBXB4WEGN": {
+      "skipped": "no P4 surface"
+    },
+    "0AP3OOMEPID": {
+      "max_rel_err": 7.629510948352397e-06,
+      "p999_rel_err_lsb": 0.49949351296594
+    }
+  }
+}
