@@ -49,9 +49,13 @@ Timed 20 pilot windows on each of RF, IQ without upsample (`iq_up0`), and IQ wit
 | IQ, no upsample | `(128, 204, 2)` int16 | 102 | 0.5 s | 0.003 s | 3.2 h, 247 GiB | 1.1 h, 81 GiB |
 | IQ, upsample | `(128, 680, 2)` int16 | 340 | 0.5 s | 0.03 s | 3.6 h, 823 GiB | 1.2 h, 270 GiB |
 
-Hours are one reader; the real fetch uses several. Warm reads are ~100× faster, so clip-ordered fetch with prefetch matters.
+The old 107 KiB/frame assumption is low. RF is 170 KiB on every window, so the full raw set is about 411 GiB, not 259. IQ without upsampling is the small one, at 102 KiB. Upsampled IQ is the same IQ stretched onto the RF time grid, at 340 KiB.
 
-**G0 preference:** store IQ without upsample (`iq_up0`). Smallest, fits the full 24k on this disk, and it is the form the beamformer takes. Upsampled IQ does not fit the full set (823 GiB). Stage 2 P3 still has to confirm that `upsample=False` rebuilds the stored lossless LL.
+The disk (about 779 GB free) can hold RF or non-upsampled IQ for all 24,000 volumes, plus the LL copy. Upsampled IQ at 823 GiB does not fit the full set. The first dataset fits all three forms.
+
+IQ was timed right after RF on the same windows, so a little chunk-server cache may remain in those times. The sizes are exact. The hours are one reader; the real fetch uses several. A second read of the same window is about 100 times faster, which is why reading each clip in frame order matters.
+
+**G0 preference:** store IQ without upsample (`iq_up0`). It is both small and fast, and it is the form the beamformer takes. The re-beamform check (Stage 2, P3) still has to confirm that this upsample setting reproduces the stored LL.
 
 Per-window JSON: [raw_timings_rf.json](artifacts/raw_timings_rf.json), [raw_timings_iq_up0.json](artifacts/raw_timings_iq_up0.json), [raw_timings_iq_up1.json](artifacts/raw_timings_iq_up1.json).
 

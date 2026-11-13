@@ -71,7 +71,7 @@ The sampler's `selection_report.json` replaces these with exact figures from the
 - OD positives by depth, subset / pool: up to 0.8 mm 693 / 730; 0.8 to 1.0 mm 1,752 / 4,728; 1.0 to 1.3 mm 1,674 / 3,888; 1.3 to 2.0 mm 1,477 / 2,519; above 2.0 mm 404 / 404. The shallow and deep tails are essentially used up at this size.
 - Train `sample_weight` ranges from 1.0 to 6.13, median 2.58.
 - 2,536,789 frames. LL lossy copy 16.7 GB.
-- Raw size 259 GiB **if** raw is 107 KiB per frame. That figure is still an assumption from the prefetch report, not a measurement; Stage 3 of the build plan measures it.
+- Raw size, measured 13 Nov 2026: `iq_up0` 102 KiB/frame, about 247 GiB for these 24,000 volumes. RF is 170 KiB/frame (411 GiB). Upsampled IQ is 340 KiB/frame (823 GiB) and does not fit the full set. The build plan's G0 preference is `iq_up0`.
 - Windows sharing a 512-frame chunk (assumed aligned; unverified) save about 10% of chunk downloads (28,992 chunk references, 26,039 unique). The sampler does not optimise for this.
 
 ## Files

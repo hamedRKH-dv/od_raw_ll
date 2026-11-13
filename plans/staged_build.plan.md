@@ -12,8 +12,8 @@ todos:
     content: "Stage 2: prerequisites P1-P5 (frame index, profile, upsample, ID surfaces for 5 inspections, LL reconstruction tolerance)"
     status: pending
   - id: s3-measure
-    content: "Stage 3: RF + IQ timing and compression on 20 manifest windows, rerun estimate against volume free space; present G0"
-    status: pending
+    content: "Stage 3: RF + IQ timing on 20 windows. Measured 13 Nov 2026. G0 preference iq_up0 (102 KiB/frame, 247 GiB for 24k). iq_up1 does not fit the full set."
+    status: completed
   - id: s4-ll-copy
     content: "Stage 4: copy_ll_subset.py, pilot LL copy to the volume, blob hash and loader checks"
     status: pending
@@ -86,13 +86,17 @@ Revised 12 Nov 2026. The earlier version of this plan targeted an older, smaller
 
 ## Size and time budget
 
-Only the LL lossy figure rests on measured bytes. The rest are estimates until Stage 3.
+Measured 13 Nov 2026 on 20 pilot windows, all 60 reads succeeded, shape constant across all five inspections. The old 107 KiB/frame figure was a low guess for RF. Hours below are one reader. A second read of the same window is about 100 times faster. IQ was timed right after RF on the same windows, so a little chunk-server cache may remain in those times. The sizes do not depend on that.
 
-- LL lossy copy: 16.7 GB (6.6 kB per frame, measured rate).
-- LL lossless copy for 4,000 eval volumes: about 57 GB (98.6 GB over 6,895 lossless volumes, scaled).
-- Raw, uncompressed: 259 GiB **if** raw is 107 KiB per frame. Unmeasured assumption from the prefetch report.
-- Total on the volume: about 328 GiB (about 352 GB) plus logs, caches and Lance overhead. Root had 779 GB free on 12 Nov 2026, which is above the 500 GiB target. Re-check `df` at Stage 0. The first fetch (4,000 train plus 4,000 eval) is about a third of that.
-- Raw fetch time, scaled from the earlier unmeasured assumptions: roughly 6 to 25 hours on one worker, 1 to 3 hours on eight. The pilot replaces this with a measurement.
+| Form | Shape per frame | KiB/frame | Cold read | Warm read | Full 24,000 | First dataset (4k train + 4k eval) |
+|---|---|---|---|---|---|---|
+| RF | `(128, 680)` int16 | 170 | 2.6 s | 0.02 s | 17.4 h, 411 GiB | 5.8 h, 135 GiB |
+| IQ, no upsample (`iq_up0`) | `(128, 204, 2)` int16 | 102 | 0.5 s | 0.003 s | 3.2 h, 247 GiB | 1.1 h, 81 GiB |
+| IQ, upsample (`iq_up1`) | `(128, 680, 2)` int16 | 340 | 0.5 s | 0.03 s | 3.6 h, 823 GiB | 1.2 h, 270 GiB |
+
+- LL lossy copy: 16.7 GB. LL lossless copy for 4,000 eval volumes: about 57 GB.
+- Root had 779 GB free on 12 Nov 2026. RF (411 GiB) and `iq_up0` (247 GiB) fit the full 24,000 plus the LL copy. Upsampled IQ at 823 GiB does not fit the full set. The first dataset fits all three forms.
+- **G0 preference:** store `iq_up0`. It is the smallest, the beamformer consumes IQ, and upsampling only stretches the same samples onto the RF time grid. P3 still has to show `upsample=False` reproduces a normal beamform. Per-window JSON is in `artifacts/raw_timings_{rf,iq_up0,iq_up1}.json`.
 
 ## Facts the plan relies on
 
@@ -110,7 +114,7 @@ Paths below are on `dv-hamed`, under `~/core-learning/ILIWorkflows`. Checked aga
 ## Open risks
 
 - **Working disk.** Root has 779 GB free, which covers the ~328 GiB estimate. Re-check `df` at Stage 0; free space moves. The instance store must not hold the catalog.
-- **Raw size is an assumption.** 259 GiB could be off by a large factor in either direction. Nothing large is fetched before G0.
+- **Raw size is measured.** 20 windows, 13 Nov 2026: RF 170 KiB/frame (411 GiB for 24k), `iq_up0` 102 KiB/frame (247 GiB), `iq_up1` 340 KiB/frame (823 GiB, does not fit the full set). G0 preference is `iq_up0`, pending P3.
 - **ID-surface locations.** Needed for the re-beamform check and not recorded in the catalog. Listed 13 Nov 2026, one candidate each: `s3://dv-ilit0007/track_runs/0A1OLRV96N3/ili_ml_surface/v1.2/`, `s3://dv-ilit0008/track_runs/0A49KLT3B7Y/ili_ml_surface/v1.2/`, `s3://dv-ilit0010/track_runs/0ABP0TFUSH1/ili_ml_surface/v1.2/`, `s3://dv-ilit0011/track_runs/0AGBXB4WEGN/ili_ml_surface/` and `s3://dv-ilit0013/track_runs/0AP3OOMEPID/ili_ml_surface/` (no version folder; tracks directly below). P4 confirms each by re-beamform match.
 - **Frame numbering.** Catalog `frame_start` values reach tens of millions. P1 proves the reader and the beamformer use the same numbering.
 - **S3 destination.** `s3://ili-ml-datasets/lancedb/research/hamed/od_raw_ll` (confirmed by you, 12 Nov 2026). Write access is probed in Stage 0. If the probe is denied, the stage stops and the bucket policy is requested; there is no fallback bucket.
@@ -203,12 +207,11 @@ New `scripts/check_prerequisites.py`, one subcommand per check, JSON to `$VOL/wo
 - **P5 LL reconstruction tolerance.** Decode stored `lossless_frame_bytes` with `Jp2Decoder`, invert `x = u16 / 65535 * (vmax - vmin) + vmin`, compare with a fresh beamform. The relative error on the matching surface sets the Stage 6 tolerance (expected near 1/65535 of range).
 - **Verify:** every P has a JSON with `passed: true`, or `passed: false` plus a reason. Stop on P1 or P3 failure: the pairing would be wrong.
 
-### Stage 3. Measure RF and IQ
+### Stage 3. Measure RF and IQ (done 13 Nov 2026)
 
-- Extend `time_raw_window.py`: for each of the 20 windows and each of `rf`, `iq_up0`, `iq_up1`, record `shape`, `dtype`, KiB per frame, open seconds, cold and warm read seconds, zlib-1 and zstd-3 ratios. One process per form.
-- Extend `estimate.py` to read `manifest.parquet` and print, per form and per tier: GiB uncompressed and compressed, hours on 1 and N workers, and the result against the volume's free space from Stage 0.
-- **Verify:** all 60 reads succeed; shape constant within an inspection (a difference between inspections is reported, since it decides the student's input shape).
-- **G0 (your call):** raw form, codec (`raw` int16 or `zstd3`), and how many tiers fit the volume with 20% headroom.
+`scripts/time_raw_window.py` read 20 windows for `rf`, `iq_up0`, and `iq_up1`. All 60 succeeded. Shape is the same on every inspection: RF `(128, 680)` int16, IQ without upsample `(128, 204, 2)`, IQ with upsample `(128, 680, 2)`. zlib-1 ratios (median): RF 1.63, `iq_up0` 2.62, `iq_up1` 1.69. zstd was not measured.
+
+Numbers are in the size table above. **G0 preference: `iq_up0`, uncompressed for the pilot.** Codec stays open until the pilot shows real disk use.
 
 ### Stage 4. LL copy, pilot
 
