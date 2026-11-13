@@ -16,6 +16,16 @@ This repo is the R&D record: the staged plan, the subset sampler, and the measur
 
 `scripts/README.md`, `scripts/PLAN.md`, `scripts/catalog_census.json`, and `scripts/od_raw_ll_plan.pptx` describe a retired 26k catalog on `s3://dv-ml-data/...`. Do not use them as the source of truth.
 
+## Figures
+
+**Subset and tiers**
+
+![Subset and fetch tiers](artifacts/od_raw_ll_overview.jpg)
+
+**Anomaly type, catalog vs subset**
+
+![Anomaly type share, catalog vs 24k subset](artifacts/od_raw_ll_type_compare.jpg)
+
 ## Source
 
 `s3://ili-ml-datasets/lancedb/research/mahsa/kraken/od_corrosion/ll/merged_7neg_8_10_11_13`
