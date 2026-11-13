@@ -64,7 +64,7 @@ Volume `1074d0fd-6f4d-5246-8db5-3dfa44c2961d`, clip `01-001-18AJ0C8D`, frames 10
 
 The difference panel is black. Every pixel in all 53 frames is identical after scaling. This is the surface folder the stored LL was built from, and the decode-plus-rebuild path is right.
 
-### `0A1OLRV96N3` — fail, close
+### `0A1OLRV96N3` — fail
 
 Volume `0005b152-9eef-51e5-9915-210204d6ba05`, clip `01-013-114ZP5VY`, frames 4179111–4179180. This inspection has no eval OD positive, so the window is a random background volume. `vmax` 328,103.
 
@@ -72,7 +72,7 @@ Volume `0005b152-9eef-51e5-9915-210204d6ba05`, clip `01-013-114ZP5VY`, frames 41
 
 About 72% of pixels are within 1 level on every frame. The worst pixel in the window is 324 levels, and on the middle frame 133. The 99.9th percentile of the error is 16 levels, so the miss is a thin tail plus a lot of pixels a few levels off. The left and middle panels still look like the same pipe.
 
-### `0A49KLT3B7Y` — fail, close
+### `0A49KLT3B7Y` — fail
 
 Volume `e7959c75-ceed-519e-a855-a3deafeb5aaa`, clip `01-011-11YWDVD4`, frames 6735163–6735267. `vmax` 273,391.
 
@@ -80,7 +80,7 @@ Volume `e7959c75-ceed-519e-a855-a3deafeb5aaa`, clip `01-011-11YWDVD4`, frames 67
 
 Same pattern as `0A1OLRV96N3`: about 67% within 1 level, flat across all 105 frames, 99.9th percentile 16 levels. The difference lights up along the bright wall bands. A few pixels reach 3,816 levels. The middle frame itself never exceeds 16.
 
-### `0AGBXB4WEGN` — fail, far
+### `0AGBXB4WEGN` — fail
 
 Volume `4e53520e-966f-5de1-b866-f7e32d488a39`, clip `01-000-15LR96LM`, frames 1307094–1307195. `vmax` 338,198. This inspection has no `v1.2` folder. The surface used is `ili_ml_surface/` with the track folders directly underneath.
 
@@ -88,19 +88,48 @@ Volume `4e53520e-966f-5de1-b866-f7e32d488a39`, clip `01-000-15LR96LM`, frames 13
 
 The middle frame is 21.8% within 1 level, and most of the difference panel is at or past 16 levels. The structure in the difference follows the wall bands, which is what a shifted pipe center looks like. The worst pixel is 11,349 levels. The 99.9th percentile is 4,849.
 
-### `0ABP0TFUSH1` — fail, far
+### `0ABP0TFUSH1` — fail
 
 Volume `7d0f544b-fedd-58a4-b777-d7fbe9ad9d4a`, clip `01-012-145IKTIF`, frames 5528611–5528712. `vmax` 309,429.
 
 ![0ABP0TFUSH1 stored, rebuilt, difference](figures/0ABP0TFUSH1.jpg)
 
-Worst of the five. 22.0% of the window is within 1 level, the middle frame 20.7%, and the middle frame alone reaches 8,406 levels. The window worst is 19,287. The 99.9th percentile is 4,903. Same wall-shaped difference as `0AGBXB4WEGN`.
+Worst of the five. 22.0% of the window is within 1 level, the middle frame 20.7%, and the middle frame alone reaches 8,406 levels. The window worst is 19,287. The 99.9th percentile is 4,903. Its difference is diagonal streaks, not the wall-shaped pattern of the other inspections (see the 36-window section).
+
+## More windows: 36 tested
+
+The same check on 36 windows, 8 per inspection (5 for `0A1OLRV96N3`), with a mix of anomaly types. Window list: `more_windows.json`. Numbers: `more/summary.json`.
+
+| Inspection | Windows | Passed | Within 1 level, range over windows |
+|---|---|---|---|
+| `0AP3OOMEPID` | 8 | 8 | 100% |
+| `0A1OLRV96N3` | 5 | 0 | 70.3% to 79.4% |
+| `0A49KLT3B7Y` | 8 | 0 | 57.8% to 74.2% |
+| `0ABP0TFUSH1` | 7 | 0 | 22.0% to 66.1% |
+| `0AGBXB4WEGN` | 8 | 0 | 23.1% to 70.8% |
+
+![Every tested window against the 99.9% line](more/strip.jpg)
+
+Grids, one per inspection. Rows are windows, columns are stored LL, rebuilt LL, and difference on a 0 to 16 gray-level scale. The percent on each row is the whole window.
+
+- [`0AP3OOMEPID`](more/0AP3OOMEPID_grid.jpg)
+- [`0A1OLRV96N3`](more/0A1OLRV96N3_grid.jpg)
+- [`0A49KLT3B7Y`](more/0A49KLT3B7Y_grid.jpg)
+- [`0ABP0TFUSH1`](more/0ABP0TFUSH1_grid.jpg)
+- [`0AGBXB4WEGN`](more/0AGBXB4WEGN_grid.jpg)
+
+The failure is per inspection, not one bad window. Every window of the four failing inspections is under the line. Their ranges overlap, so the earlier "close" and "far" grouping is not supported.
+
+What the difference panels show:
+
+- `0A1OLRV96N3` and `0A49KLT3B7Y`: the difference follows the bright wall bands, with a few levels of error across most pixels.
+- `0ABP0TFUSH1`: long diagonal streaks run across the difference panels. They look like edges displaced by a changing amount, not random noise. The cause is not identified yet.
 
 ## What this does and does not say
 
-The rebuild method is right. `0AP3OOMEPID` is exact, and P3 showed the raw IQ we would store produces that same beamform.
+The rebuild method is right. `0AP3OOMEPID` is exact on all 8 windows, and P3 showed the raw IQ we would store produces that same beamform.
 
-The other four are using an ID-surface folder that does not reproduce their stored LL. `0A1OLRV96N3` and `0A49KLT3B7Y` are near it: most pixels are close, and the typical miss is a few levels, with a thin tail. `0AGBXB4WEGN` and `0ABP0TFUSH1` are a different picture in gray-level terms even though the wall bands still land in roughly the same place on the screen.
+The other four inspections use an ID-surface folder that does not reproduce their stored LL, on every window tested. The 36-window run confirms the single-window result; it is not one bad window.
 
 The pilot should not start until each of those four has a surface folder that clears 99.9%. The next step is to look for another version of those surfaces, or to ask which file the stored LL was built with.
 
