@@ -30,8 +30,8 @@ class Progress:
         self.done = 0
         self.started = time.perf_counter()
 
-    def tick(self, detail: str = "") -> str:
-        self.done += 1
+    def advance(self, n: int = 1, detail: str = "") -> str:
+        self.done += n
         line = format_line(
             self.done,
             self.total,
@@ -41,3 +41,6 @@ class Progress:
         )
         print(line, file=sys.stderr, flush=True)
         return line
+
+    def tick(self, detail: str = "") -> str:
+        return self.advance(1, detail)

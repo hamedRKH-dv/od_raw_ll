@@ -1,6 +1,7 @@
 catalog/
 work/
 cache/
+tmp_ml_surface/
 __pycache__/
 *.pyc
 .venv/

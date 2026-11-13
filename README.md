@@ -8,7 +8,7 @@ This repo is the R&D record: the staged plan, the subset sampler, and the measur
 
 | File | What it is |
 |---|---|
-| [plans/staged_build.plan.md](plans/staged_build.plan.md) | The build. Stages 0, 1, and 3 are done. Stage 2 is next. |
+| [plans/staged_build.plan.md](plans/staged_build.plan.md) | The build, stage by stage. |
 | [plans/subset_sampler.plan.md](plans/subset_sampler.plan.md) | How the 24,000 volumes were chosen. |
 | [artifacts/od_raw_ll_overview.jpg](artifacts/od_raw_ll_overview.jpg) | One-page picture of the subset and the tiers. |
 | [artifacts/od_raw_ll_type_compare.jpg](artifacts/od_raw_ll_type_compare.jpg) | Catalog vs subset, by anomaly type. |
@@ -16,6 +16,21 @@ This repo is the R&D record: the staged plan, the subset sampler, and the measur
 | [artifacts/raw_timings_iq_up0.json](artifacts/raw_timings_iq_up0.json) | Stage 3: IQ without upsample (preferred form). |
 
 `scripts/README.md`, `scripts/PLAN.md`, `scripts/catalog_census.json`, and `scripts/od_raw_ll_plan.pptx` describe a retired 26k catalog on `s3://dv-ml-data/...`. Do not use them as the source of truth.
+
+## Where things stand (13 Nov 2026)
+
+The 500-volume pilot is on the machine, in `catalog/` (not in git). Each volume has its LL image and its IQ frames. IQ is stored without upsample, shape `(128, 204, 2)` int16 per frame. That is the array the beamformer reads. The full 24,000 is not fetched yet.
+
+| Stage | State |
+|---|---|
+| 0 Environment, 1 Manifest, 3 Raw timing | Done |
+| 2 Prerequisites | P1, P2, and P3 pass. P3 locks IQ without upsample. |
+| 2, P4 and P5 | `0AP3OOMEPID` matches the stored LL exactly. `0A1OLRV96N3` and `0A49KLT3B7Y` match after the float16 rounding those images were saved with. `0ABP0TFUSH1` and `0AGBXB4WEGN` do not: the wall does not land on the same pixels. Report: [artifacts/p4/p4_rebeamform.md](artifacts/p4/p4_rebeamform.md). |
+| 4 and 5, pilot | LL and IQ for the 500 are written locally. Not validated. |
+| 6 Validate pilot | Next. Then a decision on whether to fetch the remaining tiers. |
+| 7 to 9 | Not started. |
+
+`0ABP0TFUSH1` and `0AGBXB4WEGN` are in the pilot. Their re-beamform check is skipped until the ID-surface file that built their stored LL is identified.
 
 ## Figures
 
@@ -55,7 +70,7 @@ The disk (about 779 GB free) can hold RF or non-upsampled IQ for all 24,000 volu
 
 IQ was timed right after RF on the same windows, so a little chunk-server cache may remain in those times. The sizes are exact. The hours are one reader; the real fetch uses several. A second read of the same window is about 100 times faster, which is why reading each clip in frame order matters.
 
-**G0 preference:** store IQ without upsample (`iq_up0`). It is both small and fast, and it is the form the beamformer takes. The re-beamform check (Stage 2, P3) still has to confirm that this upsample setting reproduces the stored LL.
+**Stored form:** IQ without upsample (`iq_up0`). It is the smallest form that fits, and P3 showed it is the array the beamformer reads: handing those frames back in reproduces a normal beamform with difference 0. Upsampled IQ is rejected by the beamformer.
 
 Per-window JSON: [raw_timings_rf.json](artifacts/raw_timings_rf.json), [raw_timings_iq_up0.json](artifacts/raw_timings_iq_up0.json), [raw_timings_iq_up1.json](artifacts/raw_timings_iq_up1.json).
 
@@ -75,4 +90,4 @@ That mix is deliberate and it is not a copy of the catalog. See the table in the
 
 Work runs on `dv-hamed` (`i-023016cf319153c36`, g5.2xlarge, one A10G). The host name `ec2-hamed` is retired. Build on the root disk (`/` had 777 GiB free on 13 Nov 2026, write about 890 MiB/s). Do not use `/opt/dlami/nvme`; it is wiped when the instance stops. The workflow checkout `~/core-learning/ILIWorkflows` is read-only. The Python env is `cache/venv` (gitignored). `uv sync --frozen` failed there because that checkout has no `uv.lock`. The installed LanceDB is 0.37.1, not 0.40.0; it opened the source catalog. PyTorch sees the A10G.
 
-Stages 0, 1, and 3 are done. One clip opened on each of the five inspections. A one-row probe table was created and dropped under the destination bucket; only the empty catalog manifest remains. Stage 3 replaced the 107 KiB assumption with the table above and points at `iq_up0`. Next is Stage 2: frame numbering, the zero-angle profile, which IQ upsample matches a normal beamform (locks `iq_up0` or forces `iq_up1`), and which ID-surface file reproduces the stored lossless LL. After Stage 2 passes, the 500-volume pilot is fetched before any larger tier.
+One clip opened on each of the five inspections. A one-row probe table was created and dropped under the destination bucket. Current status is in "Where things stand" above.

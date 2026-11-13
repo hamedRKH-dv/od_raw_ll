@@ -402,6 +402,17 @@ def sample_windows(manifest: pd.DataFrame, seed: int, per_inspection: int = 4) -
     return windows
 
 
+def slice_manifest(manifest: pd.DataFrame, *, pilot: bool = False, tier: int | None = None) -> pd.DataFrame:
+    """Pilot, or every volume with tier <= N (eval is tier 4000, so it is included once)."""
+    if pilot and tier is not None:
+        raise ValueError("pass only one of pilot and tier")
+    if pilot:
+        return manifest[manifest["pilot"]].copy()
+    if tier is not None:
+        return manifest[manifest["tier"] <= tier].copy()
+    return manifest.copy()
+
+
 def selection_report(manifest: pd.DataFrame) -> dict:
     train = manifest[manifest.split == "train"]
     report = {

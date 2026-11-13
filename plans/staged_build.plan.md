@@ -9,17 +9,17 @@ todos:
     content: "Stage 1: select_paired_subset.py (stratified, tiered, deterministic), tests, manifest.parquet + selection_report.json on the merged catalog"
     status: completed
   - id: s2-prereq
-    content: "Stage 2: prerequisites P1-P5 (frame index, profile, upsample, ID surfaces for 5 inspections, LL reconstruction tolerance)"
+    content: "Stage 2: P1-P3 pass and lock IQ without upsample. P4/P5: 0AP3 exact; 0A1 and 0A49 match after float16; 0ABP and 0AGB still miss the stored wall."
     status: pending
   - id: s3-measure
     content: "Stage 3: RF + IQ timing on 20 windows. Measured 13 Nov 2026. G0 preference iq_up0 (102 KiB/frame, 247 GiB for 24k). iq_up1 does not fit the full set."
     status: completed
   - id: s4-ll-copy
-    content: "Stage 4: copy_ll_subset.py, pilot LL copy to the volume, blob hash and loader checks"
-    status: pending
+    content: "Stage 4: pilot LL copy of 500 volumes is in catalog/ (13 Nov 2026). Hash verify on the full pilot is still open."
+    status: completed
   - id: s5-raw-write
-    content: "Stage 5: raw_volumes_schema, raw_reader.py, write_raw_subset.py, pilot raw write, kill/resume test"
-    status: pending
+    content: "Stage 5: pilot IQ (no upsample, codec raw) for the same 500 volumes is in catalog/raw_volumes."
+    status: completed
   - id: s6-validate-pilot
     content: "Stage 6: validate_paired_catalog.py on pilot incl. fresh-read and re-beamform checks, S3 sync round-trip; present G1"
     status: pending

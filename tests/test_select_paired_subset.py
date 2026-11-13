@@ -194,6 +194,17 @@ class ManifestTest(unittest.TestCase):
         self.assertFalse(deep.empty)
         sampler.check_manifest(first, meta, max_frames=330)
 
+    def test_slice_is_pilot_or_cumulative_tier(self) -> None:
+        meta = _catalog()
+        manifest = self._build(meta)
+        pilot = sampler.slice_manifest(manifest, pilot=True)
+        first = sampler.slice_manifest(manifest, tier=200)
+        self.assertTrue(pilot.pilot.all())
+        self.assertTrue(set(pilot.volume_id) <= set(first.volume_id))
+        self.assertEqual(int((manifest.tier <= 200).sum()), len(first))
+        with self.assertRaises(ValueError):
+            sampler.slice_manifest(manifest, pilot=True, tier=200)
+
     def test_overlap_across_splits_fails(self) -> None:
         meta = _catalog()
         manifest = self._build(meta)
