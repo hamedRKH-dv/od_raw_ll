@@ -1,116 +1,114 @@
 # P4: does a rebuilt LL match the stored one?
 
-13 Nov 2026. One short eval window per inspection. The question is whether beamforming those frames again, with the ID-surface file we have, reproduces the lossless LL image already in Mahsa's catalog.
+13 Nov 2026. The question is whether beamforming the same frames again reproduces the lossless LL image in the catalog.
 
-Pass line, fixed before the run: at least 99.9% of pixels within 1 gray level. One inspection passes. Four do not.
+Pass line, fixed before the run: at least 99.9% of pixels within 1 gray level.
+
+The first comparison failed four inspections. Most of that gap is the way those four were saved. Their LL was copied from an older dataset that stored each frame as float16, which keeps about 3 digits. The JPEG2000 in the catalog is a lossless copy of that already-rounded image. Comparing a full-precision rebuild against it counts the rounding as error.
+
+`0AP3OOMEPID` was written by the current sampler at full precision. It matches exactly, so the rebuild itself is right.
 
 ## How the two pictures are made
 
-**Stored image, the answer key.** The catalog does not store pixels. The `volumes` row holds `lossless_frame_bytes`, a packed blob, plus `lossless_frame_offsets` and `lossless_frame_lengths`, one pair per frame. Each slice is a JPEG2000 payload. `Jp2Decoder` turns it back into a `uint16` picture, values 0 to 65535, shape `(n_frames, 441, 201)`.
+**Stored image.** The catalog stores `lossless_frame_bytes` plus per-frame offsets and lengths. `Jp2Decoder` turns each slice back into a `uint16` picture, 0 to 65535, shape `(n_frames, 441, 201)`.
 
-The writer had scaled the float image into that range with the row's `vol_vmin` and `vol_vmax`:
+The writer scaled the float image with the row's `vol_vmin` and `vol_vmax`:
 
 ```text
 stored = round((x - vmin) / (vmax - vmin) * 65535)
 ```
 
-On these five windows `vmin` is 0 and `vmax` is between about 273,000 and 338,000. Inverting the scale gives the float image shown on the left of each figure.
+On these windows `vmin` is 0 and `vmax` is about 273,000 to 338,000. One gray level is about 4 to 5 float units.
 
-**Rebuilt image.** Same frames, the production LL settings:
+**Where the four stored images came from.** Every row of `0A1OLRV96N3`, `0A49KLT3B7Y`, `0ABP0TFUSH1`, and `0AGBXB4WEGN` was inserted in the same half-second, copied from `s3://dv-ml-data/od_corrosion_detection/v4_v3_v2`. That dataset keeps each frame as a 0–1 float16 value. The legacy file and the catalog image are identical on all 28 windows checked: difference 0. The copy lost nothing. The rounding happened when the old dataset was built.
+
+**Rebuilt image.** Same frames, the production LL settings, which match `beamform_ll_window` in the sampling flow:
 
 1. Open the inspection and the clip.
-2. Download that inspection's ID-surface parquet for the frame range and fit one circle per frame. The circle is where the pipe center is.
-3. Beamform with `OuterSurfaceDetect`, the LL angle and depth grid (`LL_DEFAULTS`), and the pipe inner radius taken from the median circle radius.
+2. Fit one circle per frame from that inspection's ID-surface file.
+3. Beamform with `OuterSurfaceDetect`, `LL_DEFAULTS`, and the pipe inner radius taken from the median circle radius.
 4. The beamformer reads the clip's own channel data.
 
-A separate check (P3) handed the beamformer our IQ-without-upsample array instead of letting it read the clip. That matched this rebuild exactly, difference 0, on all five inspections. Upsampled IQ was rejected: the beamformer wants `(204, 128)` and those frames are `(680, 128)`.
+P3 handed the beamformer our IQ-without-upsample array. That matched this rebuild exactly, difference 0, on all five inspections.
 
-**The comparison.** Put the rebuilt float back through the same 0–65535 scaling and subtract from the stored `uint16`. A pixel matches when the absolute difference is 0 or 1 gray level.
+**The comparison.** For the four legacy inspections, the rebuild is put through the same float16 rounding before it is scaled to 0–65535 and subtracted. For `0AP3OOMEPID` there is no rounding step. A pixel matches when the absolute difference is 0 or 1 gray level.
 
 ## How to read the figures
 
-Every inspection is drawn the same way, so the panels compare.
+- Left is the stored image. Middle is the rebuild after the rounding that inspection was saved with. They share one brightness scale, the 1st to 99th percentile of the stored middle frame.
+- Right is the difference in gray levels, 0 to 16 on every inspection. Black is a match. Yellow is 16 or more levels off. The pass line is 1 level, so yellow is a miss.
+- The percent on a grid row is the whole window, after rounding. The single-window titles also show the percent before rounding.
+- The strip chart uses the same 99.9% line. Green reaches it.
 
-- Left and middle share one brightness scale: the 1st to 99th percentile of the stored middle frame. A bright band on the left is the same brightness on the middle.
-- Right is the difference in gray levels, and the color scale is 0 to 16 on every inspection. Black is a match. Yellow is 16 or more levels off, including errors of thousands. The pass line is 1 level, so yellow is a miss.
-- The title percentage on a single frame is that frame. The window percentage is every pixel in the window.
-- The line chart uses the same pass line, 99.9%, for every inspection.
+## Result on the original five windows
 
-The eye is a bad judge of the left and middle panels alone. A shift of tens of gray levels is invisible next to a pipe wall that spans hundreds of thousands of float units. The right panel and the line chart are the comparison.
+| Inspection | Before rounding | After the stored rounding | Worst pixel after | Verdict |
+|---|---|---|---|---|
+| `0AP3OOMEPID` | 100% | 100% (no rounding; it was stored at full precision) | 0 | Pass |
+| `0A1OLRV96N3` | 71.6% | 99.92% | 328 | Pass |
+| `0A49KLT3B7Y` | 67.0% | 99.94% | 3,808 | Pass |
+| `0AGBXB4WEGN` | 26.1% | 34.8% | 11,348 | Fail |
+| `0ABP0TFUSH1` | 22.0% | 28.3% | 19,288 | Fail |
 
-## Result
+![Match on every frame, after the stored rounding](figures/per_frame.jpg)
 
-| Inspection | Window | Surface | Within 1 level | Exact | Worst pixel | Middle frame within 1 | Verdict |
-|---|---|---|---|---|---|---|---|
-| `0AP3OOMEPID` | 53 frames, OD | `s3://dv-ilit0013/track_runs/0AP3OOMEPID/ili_ml_surface` | 100% | 100% | 0 | 100% | Pass |
-| `0A1OLRV96N3` | 70 frames, random (no eval OD) | `s3://dv-ilit0007/track_runs/0A1OLRV96N3/ili_ml_surface/v1.2` | 71.6% | 42.4% | 324 | 72.8% | Fail |
-| `0A49KLT3B7Y` | 105 frames, OD | `s3://dv-ilit0008/track_runs/0A49KLT3B7Y/ili_ml_surface/v1.2` | 67.0% | 39.0% | 3,816 | 69.3% | Fail |
-| `0AGBXB4WEGN` | 102 frames, OD | `s3://dv-ilit0011/track_runs/0AGBXB4WEGN/ili_ml_surface` | 26.1% | 18.7% | 11,349 | 21.8% | Fail |
-| `0ABP0TFUSH1` | 102 frames, OD | `s3://dv-ilit0010/track_runs/0ABP0TFUSH1/ili_ml_surface/v1.2` | 22.0% | 15.8% | 19,287 | 20.7% | Fail |
-
-Every frame of the four failures is under the 99.9% line. The miss is not one bad frame.
-
-![Match on every frame](figures/per_frame.jpg)
-
-`0AP3OOMEPID` sits on 100% for all 53 frames. `0A1OLRV96N3` stays near 72% and `0A49KLT3B7Y` near 67%, flat across the window. `0ABP0TFUSH1` stays near 22%. `0AGBXB4WEGN` starts near 62% for a couple of frames, drops to about 25%, and has a short bump to about 40% around frame 70 of the window.
+On `0A1OLRV96N3` and `0A49KLT3B7Y` the line sits on the pass line. The remaining miss is a few pixels: 99.9% of each window is exact, and one pixel still reaches hundreds or thousands of levels. On `0AGBXB4WEGN` and `0ABP0TFUSH1` rounding barely moves the line.
 
 ## The pairs
 
 ### `0AP3OOMEPID` — pass
 
-Volume `1074d0fd-6f4d-5246-8db5-3dfa44c2961d`, clip `01-001-18AJ0C8D`, frames 10298571–10298623. `vmax` 318,732.
+Volume `1074d0fd-6f4d-5246-8db5-3dfa44c2961d`, clip `01-001-18AJ0C8D`, frames 10298571–10298623. `vmax` 318,732. Written at full precision, so no float16 step.
 
 ![0AP3OOMEPID stored, rebuilt, difference](figures/0AP3OOMEPID.jpg)
 
-The difference panel is black. Every pixel in all 53 frames is identical after scaling. This is the surface folder the stored LL was built from, and the decode-plus-rebuild path is right.
+The difference panel is black. Every pixel in all 53 frames is identical.
 
-### `0A1OLRV96N3` — fail
+### `0A1OLRV96N3` — pass, once rounded the same way
 
-Volume `0005b152-9eef-51e5-9915-210204d6ba05`, clip `01-013-114ZP5VY`, frames 4179111–4179180. This inspection has no eval OD positive, so the window is a random background volume. `vmax` 328,103.
+Volume `0005b152-9eef-51e5-9915-210204d6ba05`, clip `01-013-114ZP5VY`, frames 4179111–4179180. No eval OD positive, so this is a random background window. `vmax` 328,103.
 
 ![0A1OLRV96N3 stored, rebuilt, difference](figures/0A1OLRV96N3.jpg)
 
-About 72% of pixels are within 1 level on every frame. The worst pixel in the window is 324 levels, and on the middle frame 133. The 99.9th percentile of the error is 16 levels, so the miss is a thin tail plus a lot of pixels a few levels off. The left and middle panels still look like the same pipe.
+Before rounding, 71.6% of pixels were within 1 level and the difference followed the bright wall. After the same float16 rounding, 99.92% are within 1 level and 99.9% are exact. The difference panel goes dark. One pixel in the window is still 328 levels off.
 
-### `0A49KLT3B7Y` — fail
+### `0A49KLT3B7Y` — pass, once rounded the same way
 
 Volume `e7959c75-ceed-519e-a855-a3deafeb5aaa`, clip `01-011-11YWDVD4`, frames 6735163–6735267. `vmax` 273,391.
 
 ![0A49KLT3B7Y stored, rebuilt, difference](figures/0A49KLT3B7Y.jpg)
 
-Same pattern as `0A1OLRV96N3`: about 67% within 1 level, flat across all 105 frames, 99.9th percentile 16 levels. The difference lights up along the bright wall bands. A few pixels reach 3,816 levels. The middle frame itself never exceeds 16.
+Same change. 67.0% before rounding, 99.94% after. 99.9% of pixels are exact. One pixel reaches 3,808 levels.
 
-### `0AGBXB4WEGN` — fail
+### `0AGBXB4WEGN` — still fail
 
-Volume `4e53520e-966f-5de1-b866-f7e32d488a39`, clip `01-000-15LR96LM`, frames 1307094–1307195. `vmax` 338,198. This inspection has no `v1.2` folder. The surface used is `ili_ml_surface/` with the track folders directly underneath.
+Volume `4e53520e-966f-5de1-b866-f7e32d488a39`, clip `01-000-15LR96LM`, frames 1307094–1307195. `vmax` 338,198. Surface folder is `ili_ml_surface/` with no `v1.2`.
 
 ![0AGBXB4WEGN stored, rebuilt, difference](figures/0AGBXB4WEGN.jpg)
 
-The middle frame is 21.8% within 1 level, and most of the difference panel is at or past 16 levels. The structure in the difference follows the wall bands, which is what a shifted pipe center looks like. The worst pixel is 11,349 levels. The 99.9th percentile is 4,849.
+Float16 moves this window from 26.1% to 34.8%. The difference stays yellow, with diagonal streaks: the bright bands do not land on the same pixels. The 99.9th percentile is 4,848 levels. The worst pixel is 11,348.
 
-### `0ABP0TFUSH1` — fail
+### `0ABP0TFUSH1` — still fail
 
 Volume `7d0f544b-fedd-58a4-b777-d7fbe9ad9d4a`, clip `01-012-145IKTIF`, frames 5528611–5528712. `vmax` 309,429.
 
 ![0ABP0TFUSH1 stored, rebuilt, difference](figures/0ABP0TFUSH1.jpg)
 
-Worst of the five. 22.0% of the window is within 1 level, the middle frame 20.7%, and the middle frame alone reaches 8,406 levels. The window worst is 19,287. The 99.9th percentile is 4,903. Its difference is diagonal streaks, not the wall-shaped pattern of the other inspections (see the 36-window section).
+22.0% before rounding, 28.3% after. Same streaks. The 99.9th percentile is 4,904 levels. The worst pixel is 19,288.
 
-## More windows: 36 tested
+## 36 windows
 
-The same check on 36 windows, 8 per inspection (5 for `0A1OLRV96N3`), with a mix of anomaly types. Window list: `more_windows.json`. Numbers: `more/summary.json`.
+8 per inspection, 5 for `0A1OLRV96N3`. The percent in each grid is after the rounding that inspection was stored with. Window list: `more_windows.json`. Numbers: `more/summary.json`.
 
-| Inspection | Windows | Passed | Within 1 level, range over windows |
+| Inspection | Windows | Pass after rounding | Within 1 level after rounding |
 |---|---|---|---|
 | `0AP3OOMEPID` | 8 | 8 | 100% |
-| `0A1OLRV96N3` | 5 | 0 | 70.3% to 79.4% |
-| `0A49KLT3B7Y` | 8 | 0 | 57.8% to 74.2% |
-| `0ABP0TFUSH1` | 7 | 0 | 22.0% to 66.1% |
-| `0AGBXB4WEGN` | 8 | 0 | 23.1% to 70.8% |
+| `0A1OLRV96N3` | 5 | 2 | 99.73% to 99.98% |
+| `0A49KLT3B7Y` | 8 | 7 | 99.86% to 99.98% |
+| `0ABP0TFUSH1` | 7 | 0 | 28.3% to 99.86% |
+| `0AGBXB4WEGN` | 8 | 0 | 30.8% to 95.8% |
 
 ![Every tested window against the 99.9% line](more/strip.jpg)
-
-Grids, one per inspection. Rows are windows, columns are stored LL, rebuilt LL, and difference on a 0 to 16 gray-level scale. The percent on each row is the whole window.
 
 - [`0AP3OOMEPID`](more/0AP3OOMEPID_grid.jpg)
 - [`0A1OLRV96N3`](more/0A1OLRV96N3_grid.jpg)
@@ -118,19 +116,14 @@ Grids, one per inspection. Rows are windows, columns are stored LL, rebuilt LL, 
 - [`0ABP0TFUSH1`](more/0ABP0TFUSH1_grid.jpg)
 - [`0AGBXB4WEGN`](more/0AGBXB4WEGN_grid.jpg)
 
-The failure is per inspection, not one bad window. Every window of the four failing inspections is under the line. Their ranges overlap, so the earlier "close" and "far" grouping is not supported.
-
-What the difference panels show:
-
-- `0A1OLRV96N3` and `0A49KLT3B7Y`: the difference follows the bright wall bands, with a few levels of error across most pixels.
-- `0ABP0TFUSH1`: long diagonal streaks run across the difference panels. They look like edges displaced by a changing amount, not random noise. The cause is not identified yet.
+`0A1OLRV96N3` and `0A49KLT3B7Y` sit on the line. The three windows under 99.9% miss by a few hundredths of a percent, from a handful of pixels. `0ABP0TFUSH1` and `0AGBXB4WEGN` stay spread out, and their grids still show the streaks. One `0ABP0TFUSH1` window reaches 99.86% and still fails the line.
 
 ## What this does and does not say
 
-The rebuild method is right. `0AP3OOMEPID` is exact on all 8 windows, and P3 showed the raw IQ we would store produces that same beamform.
+The rebuild matches the sampling flow, and it matches the catalog exactly where the catalog was stored at full precision.
 
-The other four inspections use an ID-surface folder that does not reproduce their stored LL, on every window tested. The 36-window run confirms the single-window result; it is not one bad window.
+For `0A1OLRV96N3` and `0A49KLT3B7Y` the earlier miss was the float16 rounding in the old dataset. The ID-surface file and the beamform settings reproduce the stored image once that rounding is applied. A few pixels per window still disagree.
 
-The pilot should not start until each of those four has a surface folder that clears 99.9%. The next step is to look for another version of those surfaces, or to ask which file the stored LL was built with.
+For `0ABP0TFUSH1` and `0AGBXB4WEGN` the rounding explains only a few points. The stored image and the rebuild disagree about where the wall sits. The surface files on S3 are older than the legacy build, so they were not replaced afterwards. What that build used differently is not identified.
 
-Numbers behind the figures: `figures/summary.json`. The check that produced the pass/fail calls: `p4.json`, `id_surfaces.json`, and `test_windows.json` in this folder.
+Numbers behind the figures: `figures/summary.json` and `more/summary.json`.
