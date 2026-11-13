@@ -1,0 +1,65 @@
+{
+  "catalog": "s3://dv-ml-data/lancedb/user/mahsa/datasets",
+  "volumes": 26361,
+  "dataset": 26373,
+  "annotations": 2326,
+  "total_frames": 3083394,
+  "lossy_bytes": 20262912277,
+  "clips": 143,
+  "n_frames_median": 110.0,
+  "n_frames_mean": 116.96802094002504,
+  "n_frames_max": 1489,
+  "mode": [
+    "ll"
+  ],
+  "codec": [
+    "jp2"
+  ],
+  "frame_hw": [
+    [
+      441,
+      201
+    ]
+  ],
+  "positives": 2325,
+  "by_split": {
+    "eval": {
+      "rows": 1891,
+      "positives": 171
+    },
+    "train": {
+      "rows": 24482,
+      "positives": 2154
+    }
+  },
+  "per_inspection": {
+    "0A1OLRV96N3": {
+      "volumes": 6143,
+      "clips": 33,
+      "frames": 653904,
+      "mean_frames": 106.4470128602,
+      "lossy_gb": 3.580767671
+    },
+    "0A49KLT3B7Y": {
+      "volumes": 6593,
+      "clips": 22,
+      "frames": 782373,
+      "mean_frames": 118.6672228121,
+      "lossy_gb": 5.244049601
+    },
+    "0ABP0TFUSH1": {
+      "volumes": 9361,
+      "clips": 22,
+      "frames": 1070362,
+      "mean_frames": 114.3426984297,
+      "lossy_gb": 7.55062457
+    },
+    "0AGBXB4WEGN": {
+      "volumes": 4264,
+      "clips": 66,
+      "frames": 576755,
+      "mean_frames": 135.2614915572,
+      "lossy_gb": 3.887470435
+    }
+  }
+}

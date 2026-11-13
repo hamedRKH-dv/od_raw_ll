@@ -1,0 +1,44 @@
+{
+  "disk": {
+    "path": "/home/ubuntu/core-learning/RnD/od_raw_ll/work",
+    "free_gib": 777.3,
+    "write_mib_s": 890.3
+  },
+  "source": {
+    "catalog": "s3://ili-ml-datasets/lancedb/research/mahsa/kraken/od_corrosion/ll/merged_7neg_8_10_11_13",
+    "dataset_rows": 61075
+  },
+  "s3": {
+    "dest": "s3://ili-ml-datasets/lancedb/research/hamed/od_raw_ll",
+    "round_trip": true
+  },
+  "clips": {
+    "opened": [
+      {
+        "inspection_id": "0A1OLRV96N3",
+        "clip_id": "01-000-10VP5Z7T",
+        "n_clips": 56
+      },
+      {
+        "inspection_id": "0A49KLT3B7Y",
+        "clip_id": "01-000-11YWD5E5",
+        "n_clips": 44
+      },
+      {
+        "inspection_id": "0ABP0TFUSH1",
+        "clip_id": "01-000-141QHJR7",
+        "n_clips": 45
+      },
+      {
+        "inspection_id": "0AGBXB4WEGN",
+        "clip_id": "01-000-15JVG9JF",
+        "n_clips": 89
+      },
+      {
+        "inspection_id": "0AP3OOMEPID",
+        "clip_id": "01-000-18AGD316",
+        "n_clips": 53
+      }
+    ]
+  }
+}

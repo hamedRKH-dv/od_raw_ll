@@ -1,0 +1,6 @@
+catalog/
+work/
+cache/
+__pycache__/
+*.pyc
+.venv/

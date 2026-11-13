@@ -1,0 +1,233 @@
+{
+  "pool_after_cap": 60399,
+  "subset": 24000,
+  "overall": [
+    {
+      "type": "nominal",
+      "group": "background",
+      "source": 25128,
+      "source_pct": 41.6,
+      "subset": 5711,
+      "subset_pct": 23.8,
+      "ratio": 0.227
+    },
+    {
+      "type": "od_corrosion",
+      "group": "positive",
+      "source": 13697,
+      "source_pct": 22.68,
+      "subset": 7428,
+      "subset_pct": 30.95,
+      "ratio": 0.542
+    },
+    {
+      "type": "random",
+      "group": "background",
+      "source": 5500,
+      "source_pct": 9.11,
+      "subset": 2566,
+      "subset_pct": 10.69,
+      "ratio": 0.467
+    },
+    {
+      "type": "inclusion",
+      "group": "confuser",
+      "source": 4374,
+      "source_pct": 7.24,
+      "subset": 2004,
+      "subset_pct": 8.35,
+      "ratio": 0.458
+    },
+    {
+      "type": "lamination",
+      "group": "confuser",
+      "source": 4243,
+      "source_pct": 7.02,
+      "subset": 2255,
+      "subset_pct": 9.4,
+      "ratio": 0.531
+    },
+    {
+      "type": "component",
+      "group": "confuser",
+      "source": 3749,
+      "source_pct": 6.21,
+      "subset": 1789,
+      "subset_pct": 7.45,
+      "ratio": 0.477
+    },
+    {
+      "type": "other_corrosion",
+      "group": "confuser",
+      "source": 3206,
+      "source_pct": 5.31,
+      "subset": 1745,
+      "subset_pct": 7.27,
+      "ratio": 0.544
+    },
+    {
+      "type": "id_corrosion",
+      "group": "confuser",
+      "source": 482,
+      "source_pct": 0.8,
+      "subset": 482,
+      "subset_pct": 2.01,
+      "ratio": 1.0
+    },
+    {
+      "type": "other",
+      "group": "confuser",
+      "source": 20,
+      "source_pct": 0.03,
+      "subset": 20,
+      "subset_pct": 0.08,
+      "ratio": 1.0
+    }
+  ],
+  "by_split": [
+    {
+      "split": "train",
+      "type": "nominal",
+      "source": 21533,
+      "source_pct": 40.19,
+      "subset": 4845,
+      "subset_pct": 24.23
+    },
+    {
+      "split": "train",
+      "type": "od_corrosion",
+      "source": 12269,
+      "source_pct": 22.9,
+      "subset": 6000,
+      "subset_pct": 30.0
+    },
+    {
+      "split": "train",
+      "type": "random",
+      "source": 5000,
+      "source_pct": 9.33,
+      "subset": 2155,
+      "subset_pct": 10.78
+    },
+    {
+      "split": "train",
+      "type": "inclusion",
+      "source": 4087,
+      "source_pct": 7.63,
+      "subset": 1717,
+      "subset_pct": 8.59
+    },
+    {
+      "split": "train",
+      "type": "lamination",
+      "source": 4045,
+      "source_pct": 7.55,
+      "subset": 2057,
+      "subset_pct": 10.29
+    },
+    {
+      "split": "train",
+      "type": "component",
+      "source": 3517,
+      "source_pct": 6.56,
+      "subset": 1557,
+      "subset_pct": 7.79
+    },
+    {
+      "split": "train",
+      "type": "other_corrosion",
+      "source": 2692,
+      "source_pct": 5.02,
+      "subset": 1231,
+      "subset_pct": 6.16
+    },
+    {
+      "split": "train",
+      "type": "id_corrosion",
+      "source": 421,
+      "source_pct": 0.79,
+      "subset": 421,
+      "subset_pct": 2.1
+    },
+    {
+      "split": "train",
+      "type": "other",
+      "source": 17,
+      "source_pct": 0.03,
+      "subset": 17,
+      "subset_pct": 0.09
+    },
+    {
+      "split": "eval",
+      "type": "nominal",
+      "source": 3595,
+      "source_pct": 52.73,
+      "subset": 866,
+      "subset_pct": 21.65
+    },
+    {
+      "split": "eval",
+      "type": "od_corrosion",
+      "source": 1428,
+      "source_pct": 20.94,
+      "subset": 1428,
+      "subset_pct": 35.7
+    },
+    {
+      "split": "eval",
+      "type": "random",
+      "source": 500,
+      "source_pct": 7.33,
+      "subset": 411,
+      "subset_pct": 10.28
+    },
+    {
+      "split": "eval",
+      "type": "inclusion",
+      "source": 287,
+      "source_pct": 4.21,
+      "subset": 287,
+      "subset_pct": 7.17
+    },
+    {
+      "split": "eval",
+      "type": "lamination",
+      "source": 198,
+      "source_pct": 2.9,
+      "subset": 198,
+      "subset_pct": 4.95
+    },
+    {
+      "split": "eval",
+      "type": "component",
+      "source": 232,
+      "source_pct": 3.4,
+      "subset": 232,
+      "subset_pct": 5.8
+    },
+    {
+      "split": "eval",
+      "type": "other_corrosion",
+      "source": 514,
+      "source_pct": 7.54,
+      "subset": 514,
+      "subset_pct": 12.85
+    },
+    {
+      "split": "eval",
+      "type": "id_corrosion",
+      "source": 61,
+      "source_pct": 0.89,
+      "subset": 61,
+      "subset_pct": 1.52
+    },
+    {
+      "split": "eval",
+      "type": "other",
+      "source": 3,
+      "source_pct": 0.04,
+      "subset": 3,
+      "subset_pct": 0.07
+    }
+  ]
+}

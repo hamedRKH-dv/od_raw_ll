@@ -1,0 +1,34 @@
+{
+  "volumes": 24000,
+  "frames": 2536664,
+  "train": 20000,
+  "eval": 4000,
+  "pilot": 500,
+  "clips": 166,
+  "inspections": [
+    "0A1OLRV96N3",
+    "0A49KLT3B7Y",
+    "0ABP0TFUSH1",
+    "0AGBXB4WEGN",
+    "0AP3OOMEPID"
+  ],
+  "by_group": {
+    "train": {
+      "confuser": 7000,
+      "background": 7000,
+      "positive": 6000
+    },
+    "eval": {
+      "positive": 1428,
+      "confuser": 1295,
+      "background": 1277
+    }
+  },
+  "by_tier": {
+    "4000": 4000,
+    "8000": 8000,
+    "12000": 12000,
+    "20000": 20000
+  },
+  "estimated_raw_gib_at_107kib": 258.8
+}
