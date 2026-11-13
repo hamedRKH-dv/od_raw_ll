@@ -53,7 +53,7 @@ Revised 12 Nov 2026. The earlier version of this plan targeted an older, smaller
 
 **Prior artifacts.**
 
-- Sampler design: `od_subset_sampler_c21f37df.plan.md` (same plans folder). Stage 1 implements it.
+- Sampler design: `subset_sampler.plan.md` (same plans folder). Stage 1 implements it.
 - [scripts/README.md](scripts/README.md), [scripts/PLAN.md](scripts/PLAN.md), [scripts/catalog_census.json](scripts/catalog_census.json), share deck and canvas: all describe the **old** catalog and are refreshed under `refresh-docs`.
 - [scripts/catalog_census.py](scripts/catalog_census.py), [scripts/time_raw_window.py](scripts/time_raw_window.py), [scripts/estimate.py](scripts/estimate.py): reused, re-pointed.
 - `od_chunk_prefetch_report.md`: source of the 107 MiB per 1,024-frame figure and the session limits (16 HTTP requests, 512 MiB HTTP cache, 256 MiB central cache).
@@ -63,7 +63,7 @@ Revised 12 Nov 2026. The earlier version of this plan targeted an older, smaller
 ## Decided
 
 - **Source:** `s3://ili-ml-datasets/lancedb/research/mahsa/kraken/od_corrosion/ll/merged_7neg_8_10_11_13`, namespace `kraken/od_corrosion`. Read-only.
-- **Subset:** 24,000 volumes, 20,000 train and 4,000 eval, stratified (spec in `od_subset_sampler_c21f37df.plan.md`). Train mix 30% OD positive, 35% confuser, 35% background. Nested train tiers 4,000 / 8,000 / 12,000 / 20,000. Pilot of 500 inside the first fetch (train tier 4,000 plus all eval).
+- **Subset:** 24,000 volumes, 20,000 train and 4,000 eval, stratified (spec in `subset_sampler.plan.md`). Train mix 30% OD positive, 35% confuser, 35% background. Nested train tiers 4,000 / 8,000 / 12,000 / 20,000. Pilot of 500 inside the first fetch (train tier 4,000 plus all eval).
 - **Raw form:** measure RF and IQ (both `upsample` settings), then pick at G0. IQ is the default because only IQ allows the re-beamform check.
 - **Compute and storage:** `dv-hamed` (`i-023016cf319153c36`, g5.2xlarge, A10G 23 GB), reached with `ssh dv-hamed` over SSM. The host name `ec2-hamed` is retired. Build on the root EBS volume (`/`, 779 GB free on 12 Nov 2026); it persists across a stop. `/opt/dlami/nvme` is a 391 GB instance store and is wiped on stop, so it is not the catalog store. S3 holds the shared, tagged copy.
 
@@ -105,13 +105,13 @@ Paths below are on `dv-hamed`, under `~/core-learning/ILIWorkflows`. Checked aga
 - `volume_id = uuid5(inspection_id, clip_id, mode, frame_start, n_frames)`; the writer accepts only `ll`, `ll_cx` and grid suffixes. Raw gets its own table keyed by the LL `volume_id`.
 - Blob-safe copy: `to_batches(blob_handling="all_binary")` then `materialize_blob_batch` (`lance_ingest/promote.py`). Insert-only writes: `LanceCatalog.insert_only`, `merge_insert`.
 - Teacher: `window_size` 25 in the LL model configs, `num_repeat` default 5 (`inference.py:179`), per-frame probabilities merged with `triangular_weights` (`inference.py:206`). Read `window_size` from the loaded production config at cache time.
-- One environment: workflow `pyproject.toml`, Python 3.11, `ilipyutils[lance,ml,registry]` (lancedb 0.40.0, pylance 10.0.0, pyarrow <18), torch 2.9.1, dinov2. Needs CodeArtifact `dv-software` credentials.
+- One environment: `cache/venv`, built from a copy of the workflow `pyproject.toml` in `cache/od_project` (local paths for `ilipyutils` and `dinov2`). Python 3.11, lancedb 0.37.1, pylance 10.0.0, torch 2.9.1. Needs CodeArtifact `dv-software` credentials.
 
 ## Open risks
 
 - **Working disk.** Root has 779 GB free, which covers the ~328 GiB estimate. Re-check `df` at Stage 0; free space moves. The instance store must not hold the catalog.
 - **Raw size is an assumption.** 259 GiB could be off by a large factor in either direction. Nothing large is fetched before G0.
-- **ID-surface locations.** Needed for the re-beamform check and not recorded in the catalog. Known: `0A1OLRV96N3` at `dv-ilit0007/track_runs/0A1OLRV96N3/ili_ml_surface/v1.2`. Version unknown: `0AGBXB4WEGN` (`dv-ilit0011`), `0ABP0TFUSH1` (`dv-ilit0010`). Inferred from the catalog name `merged_7neg_8_10_11_13` and not checked: `0A49KLT3B7Y` in `dv-ilit0008`, `0AP3OOMEPID` in `dv-ilit0013`. P4 resolves these.
+- **ID-surface locations.** Needed for the re-beamform check and not recorded in the catalog. Listed 13 Nov 2026, one candidate each: `s3://dv-ilit0007/track_runs/0A1OLRV96N3/ili_ml_surface/v1.2/`, `s3://dv-ilit0008/track_runs/0A49KLT3B7Y/ili_ml_surface/v1.2/`, `s3://dv-ilit0010/track_runs/0ABP0TFUSH1/ili_ml_surface/v1.2/`, `s3://dv-ilit0011/track_runs/0AGBXB4WEGN/ili_ml_surface/` and `s3://dv-ilit0013/track_runs/0AP3OOMEPID/ili_ml_surface/` (no version folder; tracks directly below). P4 confirms each by re-beamform match.
 - **Frame numbering.** Catalog `frame_start` values reach tens of millions. P1 proves the reader and the beamformer use the same numbering.
 - **S3 destination.** `s3://ili-ml-datasets/lancedb/research/hamed/od_raw_ll` (confirmed by you, 12 Nov 2026). Write access is probed in Stage 0. If the probe is denied, the stage stops and the bucket policy is requested; there is no fallback bucket.
 - **Volume is a single disk.** The S3 sync after each tier is the only backup.
@@ -137,7 +137,7 @@ flowchart TD
 
 ### Stage 0. Environment and volume on dv-hamed
 
-- Code decision (you, 12 Nov 2026): new code lives in the RnD folder, not in the ILIWorkflows checkout. Stage 0 runs `git init` in `~/core-learning/RnD/od_raw_ll` and creates branch `feature-od-raw-ll-pairing` there; each stage is one commit in that repo. The workflow package `~/core-learning/ILIWorkflows` (branch `master`) is imported read-only and not edited.
+- Code decision (you, 12 Nov 2026): new code lives in the RnD folder, not in the ILIWorkflows checkout. The repo is `~/core-learning/RnD/od_raw_ll` on `main`, pushed to `github.com/hamedRKH-dv/od_raw_ll`; each stage is one commit. The workflow package `~/core-learning/ILIWorkflows` (branch `master`) is imported read-only and not edited.
 - `.gitignore` before any data lands: `catalog/`, `work/`, `cache/`. A `git add` of the catalog would try to commit hundreds of gigabytes. `scripts/PLAN.md` and `scripts/README.md` describe the retired 26k catalog; the plans in `plans/` replace them.
 - Record the machine:
 
@@ -154,19 +154,19 @@ nvidia-smi --query-gpu=name,memory.total --format=csv
 - Environment:
 
 ```bash
-cd ~/core-learning/ILIWorkflows/workflows/od_corrosion_detection
+cd ~/core-learning/RnD/od_raw_ll/cache/od_project
 export UV_PROJECT_ENVIRONMENT=$HOME/core-learning/RnD/od_raw_ll/cache/venv
 export UV_CACHE_DIR=$HOME/core-learning/RnD/od_raw_ll/cache/uv
 export UV_INDEX_DV_SOFTWARE_USERNAME=aws
 export UV_INDEX_DV_SOFTWARE_PASSWORD="$(aws codeartifact get-authorization-token --domain darkvision --domain-owner 961437118368 --region us-west-2 --query authorizationToken --output text)"
-uv sync --frozen
-uv run python -c "import ilipy, lancedb, lance, torch; print(lancedb.__version__, lance.__version__, torch.cuda.is_available())"
+uv sync
+cd ../.. && cache/venv/bin/python -c "import ilipy, lancedb, lance, torch; print(lancedb.__version__, lance.__version__, torch.cuda.is_available())"
 ```
 
-The index URL is already in that `pyproject.toml` (`dv-software`). `UV_PROJECT_ENVIRONMENT` keeps the virtualenv out of the workflow checkout.
+The workflow checkout has no `uv.lock`, so `uv sync --frozen` fails there. `cache/od_project/pyproject.toml` is a copy of the workflow one with `ilipyutils` and `dinov2` pointed at their local paths (`editable = false`). Every script runs as `cache/venv/bin/python scripts/...` from `~/core-learning/RnD/od_raw_ll`.
 
 - New `scripts/probe_access.py`: reads one row from the source catalog; creates and drops a one-row table under the S3 destination; writes and reads back a 1 GiB file on the volume and reports MB/s; opens one clip per inspection on the chunk server.
-- **Verify:** import line prints `0.40.0 10.0.0 True`; volume size, free space and write speed recorded; S3 probe round-trips; one clip opens for each of the five inspections.
+- **Verify:** import line prints `0.37.1 10.0.0 True`; volume size, free space and write speed recorded; S3 probe round-trips; one clip opens for each of the five inspections.
 - **Stop** if: free space is under 150 GiB (hard floor: below the first fetch at the assumed raw size; the 500 GiB figure in the Size section is a target, not a stop), the S3 write is denied, or the GPU is missing (Stages 2, 6 and 9 need it).
 
 ### Stage 1. Manifest
@@ -187,7 +187,7 @@ def build_manifest(
 
 - Selection rules, groups, tiers, pilot and weights are specified only in [plans/subset_sampler.plan.md](plans/subset_sampler.plan.md). This stage implements that file and does not restate it.
 - Manifest columns: `volume_id`, `sample_ids`, `inspection_id`, `clip_id`, `frame_start`, `n_frames`, `split`, `anomaly_type`, `group`, `depth_bin`, `cell_size`, `cell_take`, `sample_weight`, `tier`, `pilot`; sorted by `(inspection_id, clip_id, frame_start)`.
-- Writes `$VOL/work/manifest.parquet`, `$VOL/work/selection_report.json` and `$VOL/work/sample_windows.json` (20 windows, 4 per inspection, drawn from the pilot). The existing `scripts/sample_windows.json` is the old catalog's sample and is not an input.
+- Writes `$VOL/work/manifest.parquet`, `$VOL/work/selection_report.json` and `$VOL/work/sample_windows.json` (20 windows, 4 per inspection, drawn from the pilot). The committed copies in `artifacts/` are what later stages read by default; `work/` is git-ignored scratch. The existing `scripts/sample_windows.json` is the old catalog's sample and is not an input.
 - [scripts/catalog_census.py](scripts/catalog_census.py): `DEFAULT_CATALOG` changed to the merged catalog.
 - Tests in `tests/test_select_paired_subset.py` on a small fake catalog.
 - **Verify:** two runs byte-identical (parquet SHA-256); no duplicate `volume_id`; every `volume_id` in `volumes`; `split` equals source; tiers nested and the pilot is inside the first fetch; group totals equal the budgets; every eval volume has lossless frames; no overlapping window pair crosses train/eval; all 166 clips present.
@@ -291,7 +291,7 @@ New `scripts/validate_paired_catalog.py --scope pilot|tier:N --sample K`. All mu
 
 ## Rules for every stage
 
-- Tests are written before the code they cover. Each stage is one commit in `~/core-learning/RnD/od_raw_ll` on branch `feature-od-raw-ll-pairing`.
+- Tests are written before the code they cover. Each stage is one commit in `~/core-learning/RnD/od_raw_ll` on `main`.
 - The source catalog is opened read-only. Writes go only to `$VOL` and the S3 destination.
 - A stage starts only after the previous stage's checks pass. I report each check's actual output, including failures.
 - Runs that read inspection data use your ilipy login on EC2. You start them, or approve each one.

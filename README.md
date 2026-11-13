@@ -8,11 +8,12 @@ This repo is the R&D record: the staged plan, the subset sampler, and the measur
 
 | File | What it is |
 |---|---|
-| [plans/staged_build.plan.md](plans/staged_build.plan.md) | The build. Stages 0 and 1 are done. Stage 2 is next. |
+| [plans/staged_build.plan.md](plans/staged_build.plan.md) | The build. Stages 0, 1, and 3 are done. Stage 2 is next. |
 | [plans/subset_sampler.plan.md](plans/subset_sampler.plan.md) | How the 24,000 volumes were chosen. |
 | [artifacts/od_raw_ll_overview.jpg](artifacts/od_raw_ll_overview.jpg) | One-page picture of the subset and the tiers. |
 | [artifacts/od_raw_ll_type_compare.jpg](artifacts/od_raw_ll_type_compare.jpg) | Catalog vs subset, by anomaly type. |
 | [artifacts/manifest.parquet](artifacts/manifest.parquet) | The 24,000 selected volumes. |
+| [artifacts/raw_timings_iq_up0.json](artifacts/raw_timings_iq_up0.json) | Stage 3: IQ without upsample (preferred form). |
 
 `scripts/README.md`, `scripts/PLAN.md`, `scripts/catalog_census.json`, and `scripts/od_raw_ll_plan.pptx` describe a retired 26k catalog on `s3://dv-ml-data/...`. Do not use them as the source of truth.
 
@@ -38,7 +39,21 @@ Namespace `kraken/od_corrosion`. Tables `volumes`, `dataset`, `annotations`. Mea
 
 The mix is 30% OD / 35% confuser / 35% background. It is not a miniature of the catalog: nominal falls from 41.6% to 23.8%, OD rises from 22.7% to 31.0%. See the type-compare figure.
 
-Raw size is still an assumption, about 259 GiB at 107 KiB/frame. Stage 3 measures it before any large fetch.
+## Stage 3: raw form measurement (13 Nov 2026)
+
+Timed 20 pilot windows on each of RF, IQ without upsample (`iq_up0`), and IQ with upsample (`iq_up1`). All 60 reads succeeded. Frame shape is the same on all five inspections. The old 107 KiB/frame assumption was low for RF and close for `iq_up0`.
+
+| Form | Shape per frame | KiB/frame | Cold read (median) | Warm read | Full 24,000 | First dataset (4k train + 4k eval) |
+|---|---|---|---|---|---|---|
+| RF | `(128, 680)` int16 | 170 | 2.6 s | 0.02 s | 17.4 h, 411 GiB | 5.8 h, 135 GiB |
+| IQ, no upsample | `(128, 204, 2)` int16 | 102 | 0.5 s | 0.003 s | 3.2 h, 247 GiB | 1.1 h, 81 GiB |
+| IQ, upsample | `(128, 680, 2)` int16 | 340 | 0.5 s | 0.03 s | 3.6 h, 823 GiB | 1.2 h, 270 GiB |
+
+Hours are one reader; the real fetch uses several. Warm reads are ~100× faster, so clip-ordered fetch with prefetch matters.
+
+**G0 preference:** store IQ without upsample (`iq_up0`). Smallest, fits the full 24k on this disk, and it is the form the beamformer takes. Upsampled IQ does not fit the full set (823 GiB). Stage 2 P3 still has to confirm that `upsample=False` rebuilds the stored lossless LL.
+
+Per-window JSON: [raw_timings_rf.json](artifacts/raw_timings_rf.json), [raw_timings_iq_up0.json](artifacts/raw_timings_iq_up0.json), [raw_timings_iq_up1.json](artifacts/raw_timings_iq_up1.json).
 
 Counts behind the type figure are in [artifacts/type_compare.json](artifacts/type_compare.json). The 20 timing windows are [artifacts/sample_windows.json](artifacts/sample_windows.json). Machine probes are [artifacts/probe_access.json](artifacts/probe_access.json).
 
@@ -50,10 +65,10 @@ Beamforming is the expensive step in OD corrosion detection. The idea, from a wh
 
 The first census used the wrong catalog, `s3://dv-ml-data/lancedb/user/mahsa/datasets` (26,361 volumes, 4 inspections, no lossless frames). The catalog this work uses is the merged one above. It adds `0AP3OOMEPID` (ILIT0013, more than half the rows) and lossless frames on nearly every eval volume.
 
-All 61k volumes is the wrong R&D set. Raw for the whole catalog is on the order of 650 GiB at the unmeasured 107 KiB/frame figure, and 17,037 of the train nominal windows come from 19 clips of one inspection. The subset keeps every inspection and all 166 clips, spends budget on OD depth tails and on confusers (other corrosion, ID corrosion, lamination, inclusion, component), and cuts plain nominal. Cells are inspection by anomaly type. Each cell gets 50 volumes or the whole cell, then the rest of the group budget by the square root of cell size. Order inside a cell is round-robin over clips, and for OD over depth bins, with ties broken by `sha1("20261112:"+volume_id)`. Volumes over 330 frames are dropped. A volume with two or three annotations stays one row; depth is the max. Eval volumes without lossless frames are skipped, because a later check re-beamforms stored IQ and compares it to the lossless LL image. Tiers are nested, so a later fetch only adds volumes.
+All 61k volumes is the wrong R&D set. Raw for the whole catalog would be on the order of 650 GiB at the old 107 KiB/frame guess (about 620 GiB at the measured `iq_up0` rate), and 17,037 of the train nominal windows come from 19 clips of one inspection. The subset keeps every inspection and all 166 clips, spends budget on OD depth tails and on confusers (other corrosion, ID corrosion, lamination, inclusion, component), and cuts plain nominal. Cells are inspection by anomaly type. Each cell gets 50 volumes or the whole cell, then the rest of the group budget by the square root of cell size. Order inside a cell is round-robin over clips, and for OD over depth bins, with ties broken by `sha1("20261112:"+volume_id)`. Volumes over 330 frames are dropped. A volume with two or three annotations stays one row; depth is the max. Eval volumes without lossless frames are skipped, because a later check re-beamforms stored IQ and compares it to the lossless LL image. Tiers are nested, so a later fetch only adds volumes.
 
 That mix is deliberate and it is not a copy of the catalog. See the table in the previous section. A proportional redraw would hold each type within about a point of the catalog share. That redraw has not been done.
 
 Work runs on `dv-hamed` (`i-023016cf319153c36`, g5.2xlarge, one A10G). The host name `ec2-hamed` is retired. Build on the root disk (`/` had 777 GiB free on 13 Nov 2026, write about 890 MiB/s). Do not use `/opt/dlami/nvme`; it is wiped when the instance stops. The workflow checkout `~/core-learning/ILIWorkflows` is read-only. The Python env is `cache/venv` (gitignored). `uv sync --frozen` failed there because that checkout has no `uv.lock`. The installed LanceDB is 0.37.1, not 0.40.0; it opened the source catalog. PyTorch sees the A10G.
 
-Stage 0 and Stage 1 are done. One clip opened on each of the five inspections. A one-row probe table was created and dropped under the destination bucket; only the empty catalog manifest remains. Next is Stage 2, then Stage 3, then a stop. Stage 2 checks frame numbering, the zero-angle profile, which IQ upsample matches a normal beamform, and which ID-surface file reproduces the stored lossless LL. Stage 3 times RF and both IQ upsample settings on the 20 pilot windows and replaces the 107 KiB assumption. The decision after that is the raw form, the codec, and how many tiers fit. IQ is the form that can be beamformed again to prove the pairing. The 500-volume pilot is fetched before any larger tier.
+Stages 0, 1, and 3 are done. One clip opened on each of the five inspections. A one-row probe table was created and dropped under the destination bucket; only the empty catalog manifest remains. Stage 3 replaced the 107 KiB assumption with the table above and points at `iq_up0`. Next is Stage 2: frame numbering, the zero-angle profile, which IQ upsample matches a normal beamform (locks `iq_up0` or forces `iq_up1`), and which ID-surface file reproduces the stored lossless LL. After Stage 2 passes, the 500-volume pilot is fetched before any larger tier.
