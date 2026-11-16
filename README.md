@@ -6,7 +6,6 @@ This repo holds the plan and the record. The catalog is not in git.
 
 > [!WARNING]
 > **Open**
-> - **Lance tag `od-raw-ll-v1`.** Not applied. Needs your go-ahead.
 > - **Stage 8.** Paired loader is not written.
 > - **Stage 9.** Teacher cache and distillation are not started. After that, G2: keep distilling, fetch more, or try a shared embedding.
 > - **Two inspections do not rebuild.** `0ABP0TFUSH1` and `0AGBXB4WEGN` are in the 24k, but their stored LL does not match a re-beamform. That check is skipped for them. [artifacts/p4/p4_rebeamform.md](artifacts/p4/p4_rebeamform.md)
@@ -34,6 +33,8 @@ This repo holds the plan and the record. The catalog is not in git.
 **Loading:** `dataset` has two columns the workflow schema does not: `prediction_confidence_pct` and `sample_category`. Open it with the live table schema, not `dataset_schema()`.
 
 **Checks:** each tier passed pairs, blob hashes, counts, fresh reads, a re-beamform sample, and the S3 round trip. Reports: `work/validation_tier{4000,8000,12000,20000}.json`.
+
+**Tag:** `od-raw-ll-v1` pins this snapshot. `volumes` and `raw_volumes` version 3002, `dataset` 785, `annotations` 559, `subset` 6.
 
 ![Subset and fetch tiers](artifacts/od_raw_ll_overview.jpg)
 
