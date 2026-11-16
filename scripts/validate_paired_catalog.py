@@ -301,7 +301,7 @@ def main() -> None:
         local_ok = local_ok and report["s3"]["passed"]
 
     report["passed"] = bool(local_ok)
-    out = ROOT / "work" / "validation_pilot.json"
+    out = ROOT / "work" / f"validation_{args.scope.replace(':', '')}.json"
     out.write_text(json.dumps(report, indent=2, default=str) + "\n")
     print(f"{'PASS' if report['passed'] else 'FAIL'} wrote {out}", flush=True)
     if not report["passed"]:

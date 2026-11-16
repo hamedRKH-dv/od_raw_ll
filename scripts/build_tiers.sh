@@ -3,6 +3,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export PYTHONUNBUFFERED=1
+# EC2 instance role (ml-developer) via IMDS. The default profile is SSO and expires.
+export AWS_CONFIG_FILE=/dev/null AWS_SHARED_CREDENTIALS_FILE=/dev/null
 PY=cache/venv/bin/python
 for tier in 4000 8000 12000 20000; do
   echo "=== tier ${tier}: LL copy ===" >&2
